@@ -1,6 +1,7 @@
 from app.models.carnival_model import CarnivalModel
 from app.repositories import carnival_repository
 from app.schemas.carnival_schema import CarnivalCreate, CarnivalOut, CarnivalUpdate
+from app.services import game_service
 from typing import List
 from datetime import datetime
 
@@ -20,8 +21,16 @@ def get_carnival(carnival_id: str) -> CarnivalOut:
     data = carnival_repository.get_carnival(carnival_id)
     if not data:
         return None
+
     carnival_model = CarnivalModel.from_dict(data)
-    return CarnivalOut(**carnival_model.to_dict())
+
+    # Fetch games for this carnival
+    games = game_service.list_games(carnival_id)
+
+    carnival_dict = carnival_model.to_dict()
+    carnival_dict["games"] = games
+
+    return CarnivalOut(**carnival_dict)
 
 def list_carnivals() -> List[CarnivalOut]:
     items = carnival_repository.list_carnivals()
